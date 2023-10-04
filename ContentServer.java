@@ -23,6 +23,7 @@ class ContentServer {
 
     // Processes the packet recieved from the server
     private static void processResponse(Packet responsePacket, ObjectInputStream inputStream, PrintWriter outputWriter) throws IOException, InterruptedException {
+        
         String response = responsePacket.xmlString;
         lamportClock.increment(responsePacket.timeStamp);
 
@@ -75,6 +76,10 @@ class ContentServer {
         }
     }
 
+    //
+    //  MAIN FUNCTION OF THE CONTENT SERVER
+    //  CODE IS EXECUTED HERE
+    //
     public static void main(String args[]) throws IOException, ClassNotFoundException, InterruptedException {
 
         // Command line arguments to obtain server information

@@ -63,7 +63,7 @@ public class GETClient {
     }
 
     //
-    //  MAIN FUNCTION OF THE AGGREGATION SERVER
+    //  MAIN FUNCTION OF THE GET CLIENT
     //  CODE IS EXECUTED HERE
     //
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException, NullPointerException {
