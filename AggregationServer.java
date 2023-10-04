@@ -2,15 +2,35 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+//
+//  AGGREGATION SERVER
+//  Description : Responds to requests for feeds and accepts feed updates from clients. It is responsible for aggregating ATOM feeds.
+//
 public class AggregationServer extends Thread {
 
-    // Lamport clock to manage time steps
+    // Lamport clock to manage time steps in the Aggregation Server
     public static LamportClock lamportClock = new LamportClock(0);
     
     // Linked List to store feed entries
     public static LinkedList<String> feed = new LinkedList<>();
 
-    // Initialise the feed and load data from the previous file if it exists
+    // Stores data in a file
+    public static void storeInFile(String file, LinkedList<String> data) throws IOException {
+        ObjectOutputStream outputStream = null;
+        try {
+            // write the data to the file
+            outputStream = new ObjectOutputStream(new FileOutputStream(file));
+            outputStream.writeObject(data);
+        }
+        catch (Exception e){
+            handleException(e);
+        }
+        finally {
+            if (outputStream != null) outputStream.close();
+        }
+    }
+
+    // Initialises the feed and load data from the previous file if it exists
     private static void initialiseFeed() throws IOException, ClassNotFoundException {
         LinkedList<String> tempFeed = new LinkedList<>();
         File file = new File("oldFeed.txt");
@@ -23,29 +43,27 @@ public class AggregationServer extends Thread {
             tempFeed = storedFeed;
             inputStream.close();
         }
-
         // update the feed
         feed = tempFeed;
     }
 
-    // Read request from a client's Buffered Reader
+    // Reads request from a client's Buffered Reader
     private static String readRequest(BufferedReader reader) throws IOException {
         StringBuilder request = new StringBuilder();        
-        int numLines = 0;
 
-// REFACTOR THIS
         // read lines from the request
-        while (numLines < 2) {
+        String line = reader.readLine();
+        while (!line.isEmpty() && line != null) {
             request.append("\n\r");
-            request.append(reader.readLine());
-            numLines ++;
+            request.append(line);
+            line = reader.readLine();
         }
-        return "PUT /atom.xml HTTP/1.1";
-        //return request.toString();
+        return request.toString();
     }
     
-    // Process incoming requests and create handler requests corresponding to them
+    // Processes incoming requests and creates handler requests corresponding to them
     private static void processRequest(Socket socket, String request) {
+
         // process GET request
         if (request.contains("GET /atom.xml HTTP/1.1")) {
             System.out.println("Creating new GETHandler thread...");
@@ -66,16 +84,17 @@ public class AggregationServer extends Thread {
         }
     }
 
-    // Close the server
+    // Handles exceptions
+    private static void handleException(Exception e) {
+        System.err.println("Server exception: " + e.toString());
+        e.printStackTrace();
+    }
+    
+    // Closes the server
     private static void closeServer(ServerSocket server) {
         if (server != null) {
-            // print the feed entries
-            for (String string : feed) {
-                System.out.println(string);
-            }
-
-            // close the server
             try {
+                // close the server
                 server.close();
             } catch (IOException e) {
                 System.err.println("Error while closing the server socket: " + e.getMessage());
@@ -83,28 +102,11 @@ public class AggregationServer extends Thread {
             }
         }
     }
-
-    // Handle exceptions
-    private static void handleException(Exception e) {
-        System.err.println("Server exception: " + e.toString());
-        e.printStackTrace();
-    }
-
-    // Store data in a file
-    public static void storeInFile(String file, LinkedList<String> data) throws IOException {
-        ObjectOutputStream outputStream = null;
-        try {
-            outputStream = new ObjectOutputStream(new FileOutputStream(file));
-            outputStream.writeObject(data);
-        }
-        catch (Exception e){
-            handleException(e);
-        }
-        finally {
-            if (outputStream != null) outputStream.close();
-        }
-    }
-
+    
+    //
+    //  MAIN FUNCTION OF THE AGGREGATION SERVER
+    //  CODE IS EXECUTED HERE
+    //
     public static void main(String[] args) throws IOException {
         ServerSocket server = null;
 
@@ -116,19 +118,25 @@ public class AggregationServer extends Thread {
             // initialise the feed and load existing feeds if they exist
             initialiseFeed();
 
-            // create a server socket that reuses the address
+            // create a server socket
             server = new ServerSocket(port);
             server.setReuseAddress(true);
             
             // server start up message that displays the number of previous entries
             System.out.println("Server starting with file...\r\n" + feed.size() + " previous entries.");
 
-            // accept and process incoming connections
+            // listen to incoming connections
             while (true) {
+                // accept connection
                 Socket socket = server.accept();
+
                 System.out.println("Connected at: " + socket.getInetAddress().getHostAddress() + " (address) " + socket.getInetAddress().getHostName() + " (host name)");
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                String request = readRequest(in);
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                
+                // Reads incoming request
+                String request = readRequest(bufferedReader);
+                
+                // processes incoming request
                 processRequest(socket, request);
             }
         }

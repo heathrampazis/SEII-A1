@@ -1,3 +1,7 @@
+//
+//  LAMPORT CLOCK
+//  Description : Handles all lamport clock timestamp manahement for each class.
+//
 public class LamportClock {
 
     // Variable to store the Lamport Clock time stamp

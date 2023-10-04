@@ -2,6 +2,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+//
+//  GET HANDLER
+//  Description : Handles GET requests from the GET Client
+//
 public class GETHandler implements Runnable {
 
     // Lamport clock for managing time steps
@@ -54,7 +58,9 @@ public class GETHandler implements Runnable {
         }
     }
 
-    // run method for handling client GET requests
+    //
+    //  RUN METHOD
+    //
     public void run() {
         try {
             handleRequest();

@@ -4,6 +4,10 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.LinkedList;
 
+//
+//  GET CLIENT
+//  Description : Makes HTTP GET requests to the Aggregation Sever, retrieves data from it, and displays it in a user friendly format to the terminal.
+//
 public class GETClient {
 
     // Lamport clock for managing time stamps
@@ -22,16 +26,18 @@ public class GETClient {
     }
 
     // Handles the Aggregation Server's response to the GET request
-    private static void handleResponse(Socket socket) throws IOException, ClassNotFoundException{
+    private static void processResponse(Socket socket) throws IOException, ClassNotFoundException{
         
         ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+
+        // Get the XML Response Packet from the Aggregation Server
         XMLPacket responsePacket = (XMLPacket) inputStream.readObject();
         LinkedList<String> xmlResponse = responsePacket.xmlContent;
         
-        // increment the time stamp based on the response packet
+        // Increment the time stamp based on the response packet
         lamportClock.increment(responsePacket.timeStamp);
 
-        // output the XML response to the GET Client
+        // Output the XML response to the GET Client
         outputResponse(xmlResponse);
     }
 
@@ -56,6 +62,10 @@ public class GETClient {
         if (socket != null) socket.close();
     }
 
+    //
+    //  MAIN FUNCTION OF THE AGGREGATION SERVER
+    //  CODE IS EXECUTED HERE
+    //
     public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException, NullPointerException {
         PrintWriter outputWriter = null;
         ObjectInputStream inputStream = null;
@@ -71,10 +81,10 @@ public class GETClient {
         // Print server connection information
         System.out.println("Connected at: " + socket.getInetAddress().getHostAddress() + " (address) " + socket.getInetAddress().getHostName() + " (host name)");
         
+        // Send the GET Request and process the server's response
         try {
-            // Send the GET Request and handle the server's response
             sendRequest(socket);
-            handleResponse(socket);
+            processResponse(socket);
         }
         catch( Exception e ) {
             handleException(e);
